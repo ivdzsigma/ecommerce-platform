@@ -1,0 +1,40 @@
+# docker-compose.yml
+version: "3.8"
+
+services:
+  api_gateway:
+    build: ./api_gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth_service
+      - product_service
+
+  auth_service:
+    build: ./services/auth_service
+    environment:
+      DATABASE_URL: postgresql://user:password@auth_db/auth
+    depends_on:
+      - auth_db
+      - redis
+
+  product_service:
+    build: ./services/product_service
+    environment:
+      ELASTICSEARCH_HOST: elasticsearch
+    depends_on:
+      - elasticsearch
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    environment:
+      - discovery.type=single-node
+
+  redis:
+    image: redis:alpine
+
+  auth_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
